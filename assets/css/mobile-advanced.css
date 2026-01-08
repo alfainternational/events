@@ -1,0 +1,366 @@
+/* =========================================
+   تحسينات CSS إضافية متقدمة للموبايل
+   Advanced Mobile Optimizations
+   ========================================= */
+
+/* === تحسينات الأداء Performance === */
+* {
+    -webkit-tap-highlight-color: rgba(20, 184, 166, 0.3);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+/* === تحسينات الصور === */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* === تحسين Select و Inputs للموبايل === */
+select,
+input,
+textarea,
+button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: 0;
+}
+
+/* منع Zoom عند التركيز في iOS */
+@supports (-webkit-touch-callout: none) {
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 767px) {
+
+    /* === تحسين صفحة تسجيل الدخول === */
+    .max-w-md {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    section.py-20 {
+        padding-top: 3rem !important;
+        padding-bottom: 3rem !important;
+    }
+
+    /* === تحسين صفحة تعديل الطلب === */
+    section.max-w-4xl {
+        padding: 0 !important;
+    }
+
+    /* نموذج إدخال الرمز */
+    input[name="edit_token"] {
+        font-size: 1.5rem !important;
+        letter-spacing: 0.25rem !important;
+    }
+
+    /* === تحسين الأزرار مع الأيقونات === */
+    button i,
+    a i {
+        font-size: 0.9em;
+    }
+
+    /* === تحسين رسائل الخطأ والنجاح === */
+    .bg-red-50,
+    .bg-green-100,
+    .bg-yellow-50 {
+        padding: 1rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* === تحسين الأيقونات الكبيرة === */
+    .text-5xl {
+        font-size: 2.5rem !important;
+    }
+
+    .text-6xl {
+        font-size: 3rem !important;
+    }
+
+    /* === Footer === */
+    footer {
+        padding: 1.5rem 1rem !important;
+        margin-top: 3rem !important;
+    }
+
+    footer p {
+        font-size: 0.75rem !important;
+    }
+
+    /* === تحسين الحقول مع الـ flex === */
+    .flex.flex-row-reverse.gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    .flex.flex-row-reverse.gap-2 input {
+        min-width: 0;
+    }
+
+    /* === تحسين العلامات والشارات === */
+    .px-3.py-1.rounded-full {
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.7rem !important;
+    }
+
+    /* === تحسين عرض الأيقونات في القوائم === */
+    .fas.fa-check-circle,
+    .fas.fa-times-circle {
+        font-size: 0.9rem;
+    }
+
+    /* === Navbar Improvements === */
+    nav {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+
+    /* === تحسين الأقسام المتداخلة === */
+    .space-y-10 {
+        gap: 2rem !important;
+    }
+
+    .space-y-6 {
+        gap: 1.5rem !important;
+    }
+
+    .space-y-4 {
+        gap: 1rem !important;
+    }
+
+    /* === تحسين Checkbox و Radio === */
+    input[type="checkbox"],
+    input[type="radio"] {
+        width: 1.25rem !important;
+        height: 1.25rem !important;
+        min-width: 1.25rem !important;
+        min-height: 1.25rem !important;
+    }
+
+    /* === تحسين Labels === */
+    label {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* === تحسين النصوص الصغيرة === */
+    .text-xs {
+        font-size: 0.75rem !important;
+        line-height: 1.4 !important;
+    }
+
+    .text-sm {
+        font-size: 0.875rem !important;
+    }
+
+    .text-\\[10px\\] {
+        font-size: 0.625rem !important;
+    }
+
+    /* === تحسين Modals === */
+    .fixed.inset-0 {
+        padding: 0.5rem;
+    }
+
+    .max-w-2xl {
+        max-width: 100% !important;
+    }
+
+    /* === تحسين Border Radius للموبايل === */
+    .rounded-2xl {
+        border-radius: 1rem !important;
+    }
+
+    .rounded-3xl {
+        border-radius: 1.5rem !important;
+    }
+
+    /* === تحسين Shadows === */
+    .shadow-2xl {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .shadow-xl {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* === تحسين Gap للـ Flex === */
+    .gap-8 {
+        gap: 1.5rem !important;
+    }
+
+    .gap-6 {
+        gap: 1rem !important;
+    }
+
+    /* === تحسين الأزرار في الأسفل === */
+    .flex.justify-end {
+        flex-direction: column;
+    }
+
+    .flex.justify-end button,
+    .flex.justify-end a {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* === تحسين صفحات النجاح === */
+    .w-20.h-20 {
+        width: 4rem !important;
+        height: 4rem !important;
+    }
+
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .5;
+        }
+    }
+
+    /* === تحسين روابط الهاتف === */
+    a[href^="tel:"] {
+        color: inherit;
+        text-decoration: none;
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    a[href^="tel:"]:active {
+        transform: scale(0.95);
+        background-color: rgba(20, 184, 166, 0.1);
+    }
+
+    /* === تحسين التواريخ والأوقات === */
+    input[type="date"],
+    input[type="time"] {
+        -webkit-appearance: none;
+        min-height: 3rem;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        font-size: 1.2rem;
+        cursor: pointer;
+    }
+
+    /* === تحسين النصوص الطويلة === */
+    .leading-relaxed {
+        line-height: 1.75 !important;
+    }
+
+    /* === منع تحديد النص في الأزرار === */
+    button,
+    a.btn-primary {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    /* === تحسين القوائم الطويلة === */
+    .space-y-4>*+* {
+        margin-top: 1rem !important;
+    }
+
+    /* === تحسين Border === */
+    .border-2 {
+        border-width: 1px !important;
+    }
+
+    /* === Loading States === */
+    button:active {
+        transform: scale(0.98);
+    }
+
+    /* === تحسين النماذج الطويلة === */
+    form {
+        padding-bottom: 2rem;
+    }
+
+    /* === تحسين Textarea === */
+    textarea {
+        min-height: 6rem !important;
+        resize: vertical;
+    }
+
+    /* === تحسين التباعد في البطاقات === */
+    .shimal-card>*+* {
+        margin-top: 0.75rem;
+    }
+
+    /* === Safe Area للأجهزة مع Notch === */
+    @supports (padding: max(0px)) {
+        body {
+            padding-left: max(0px, env(safe-area-inset-left));
+            padding-right: max(0px, env(safe-area-inset-right));
+        }
+
+        nav {
+            padding-left: max(1.5rem, env(safe-area-inset-left));
+            padding-right: max(1.5rem, env(safe-area-inset-right));
+        }
+    }
+
+    /* === تحسين الجداول على الموبايل === */
+    .overflow-x-auto table {
+        min-width: 100%;
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    /* === تحسين النصوص المركزية === */
+    .text-center {
+        text-align: center !important;
+    }
+
+    /* === Focus States محسّنة === */
+    input:focus,
+    select:focus,
+    textarea:focus,
+    button:focus {
+        outline: 2px solid #14b8a6;
+        outline-offset: 2px;
+    }
+
+    /* === تحسين روابط التنقل === */
+    #nav-links a {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+    }
+}

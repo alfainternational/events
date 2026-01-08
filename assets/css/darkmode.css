@@ -1,0 +1,80 @@
+/* Dark Mode Styles */
+
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --bg-card: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dark-mode {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --bg-card: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #4b5563;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.dark-mode body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.dark-mode .shimal-card {
+    background-color: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f9fafb;
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+    color: #9ca3af;
+}
+
+.dark-mode .bg-white {
+    background-color: var(--bg-card) !important;
+}
+
+.dark-mode .text-gray-600 {
+    color: #d1d5db !important;
+}
+
+.dark-mode .text-gray-700 {
+    color: #e5e7eb !important;
+}
+
+.dark-mode .text-gray-900,
+.dark-mode .text-teal-900 {
+    color: #f9fafb !important;
+}
+
+.dark-mode .border-gray-200,
+.dark-mode .border-teal-100 {
+    border-color: #4b5563 !important;
+}
+
+.dark-mode .bg-teal-50 {
+    background-color: #1f4542 !important;
+}
+
+.dark-mode .bg-gray-50 {
+    background-color: #2d3748 !important;
+}
+
+/* Transitions */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
