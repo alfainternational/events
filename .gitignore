@@ -1,0 +1,43 @@
+# Environment variables
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+storage/logs/*.log
+*.log
+
+# Cache
+storage/cache/*
+!storage/cache/.gitkeep
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+
+# Node modules (if using npm for Tailwind)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Compiled assets
+/assets/css/compiled/
+/assets/js/compiled/
+
+# Backup files
+*.bak
+*.backup
+*.sql.gz
