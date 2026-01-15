@@ -1,4 +1,13 @@
 <?php
+/**
+ * Application Initialization
+ * تهيئة التطبيق وإعدادات الأمان
+ */
+
+// تحميل Security Headers أولاً (قبل أي output)
+require_once __DIR__ . '/security_headers.php';
+
+// بدء الجلسة مع إعدادات أمان محسّنة
 session_start([
     'cookie_httponly' => true,
     'cookie_secure' => false, // Set to true in production with HTTPS

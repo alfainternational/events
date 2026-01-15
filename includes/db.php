@@ -1,10 +1,18 @@
 <?php
-// إعدادات قاعدة البيانات
-$host = 'localhost';
-$db   = 'u947172334_events';
-$user = 'u947172334_events'; 
-$pass = 'U947172334_events';    
-$charset = 'utf8mb4';
+/**
+ * Database Connection
+ * اتصال آمن بقاعدة البيانات باستخدام متغيرات البيئة
+ */
+
+// تحميل متغيرات البيئة
+require_once __DIR__ . '/env_loader.php';
+
+// إعدادات قاعدة البيانات من ملف .env
+$host = env('DB_HOST', 'localhost');
+$db   = env('DB_NAME', 'u947172334_events');
+$user = env('DB_USERNAME', 'u947172334_events');
+$pass = env('DB_PASSWORD', 'U947172334_events');
+$charset = env('DB_CHARSET', 'utf8mb4');
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
 $options = [
@@ -18,6 +26,11 @@ try {
      $pdo = new PDO($dsn, $user, $pass, $options);
 } catch (\PDOException $e) {
      // في بيئة التطوير نظهر الخطأ، في الإنتاج نسجل في اللوج فقط
-     die("فشل الاتصال بقاعدة البيانات: " . $e->getMessage());
+     if (env('APP_DEBUG', true)) {
+         die("فشل الاتصال بقاعدة البيانات: " . $e->getMessage());
+     } else {
+         error_log("Database connection failed: " . $e->getMessage());
+         die("حدث خطأ في الاتصال بقاعدة البيانات. يرجى المحاولة لاحقاً.");
+     }
 }
 ?>
