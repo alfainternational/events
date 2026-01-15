@@ -197,12 +197,25 @@ if ($page == 'success'):
                         </div>
 
                         <div id="unifiedTimingSection" class="grid grid-cols-2 gap-4">
-                            <input type="time" name="unifiedStartTime" class="p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold">
-                            <input type="time" name="unifiedEndTime" class="p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold">
-                        </div>
-                        
-                        <div id="differentTimingSection" class="hidden space-y-3" id="differentTimesContainer">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 mb-1 text-center">وقت البدء</label>
+                                <input type="time" name="unifiedStartTime" class="w-full p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold">
                             </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-400 mb-1 text-center">وقت الانتهاء</label>
+                                <input type="time" name="unifiedEndTime" class="w-full p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold">
+                            </div>
+                        </div>
+
+                        <div id="differentTimingSection" class="hidden space-y-3">
+                            <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 text-center">
+                                <i class="fas fa-info-circle text-blue-600 text-xl mb-2"></i>
+                                <p class="text-sm font-bold text-blue-800">قم بتحديد التواريخ أولاً، ثم ستظهر حقول الأوقات لكل يوم</p>
+                            </div>
+                            <div id="differentTimesContainer" class="space-y-3">
+                                <!-- سيتم إنشاء حقول الأوقات هنا ديناميكياً -->
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -305,27 +318,186 @@ if ($page == 'success'):
             document.getElementById('singleDaySection').style.display = (val === 'single_day' ? 'block' : 'none');
             document.getElementById('multipleDaysSection').style.display = (val === 'multiple_days' ? 'block' : 'none');
         }
+
         function updateDaysTypeUI() {
             const val = document.querySelector('input[name="daysType"]:checked').value;
             document.getElementById('consecutiveDaysSection').style.display = (val === 'consecutive' ? 'grid' : 'none');
             document.getElementById('separateDaysSection').style.display = (val === 'separate' ? 'block' : 'none');
+
+            // إعادة إنشاء حقول الأوقات عند تغيير نوع الأيام
+            generateDifferentTimingFields();
         }
+
         function updateTimingTypeUI() {
             const val = document.querySelector('input[name="timingType"]:checked').value;
             document.getElementById('unifiedTimingSection').style.display = (val === 'unified' ? 'grid' : 'none');
             document.getElementById('differentTimingSection').style.display = (val === 'different' ? 'block' : 'none');
+
+            // إنشاء حقول الأوقات عند اختيار "توقيت مختلف"
+            if (val === 'different') {
+                generateDifferentTimingFields();
+            }
         }
+
         function addSeparateDate() {
             const container = document.getElementById('separateDatesContainer');
             const div = document.createElement('div');
-            div.className = "flex gap-2 mb-2";
-            div.innerHTML = `<input type="date" name="separateDate[]" class="flex-1 p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold"><button type="button" onclick="this.parentElement.remove()" class="min-w-[48px] bg-red-100 text-red-500 rounded-xl"><i class="fas fa-minus"></i></button>`;
+            div.className = "flex gap-2";
+            div.innerHTML = `
+                <input type="date" name="separateDate[]" onchange="generateDifferentTimingFields()"
+                       class="flex-1 p-4 bg-teal-50 border border-teal-100 rounded-2xl font-bold">
+                <button type="button" onclick="this.parentElement.remove(); generateDifferentTimingFields();"
+                        class="min-w-[48px] bg-red-100 text-red-500 rounded-xl">
+                    <i class="fas fa-minus"></i>
+                </button>`;
             container.appendChild(div);
+
+            // إعادة إنشاء حقول الأوقات
+            generateDifferentTimingFields();
         }
+
+        /**
+         * إنشاء حقول الأوقات المختلفة لكل يوم بشكل ديناميكي
+         */
+        function generateDifferentTimingFields() {
+            const timingType = document.querySelector('input[name="timingType"]:checked')?.value;
+
+            // فقط إذا كان نوع التوقيت "مختلف"
+            if (timingType !== 'different') return;
+
+            const container = document.getElementById('differentTimesContainer');
+            container.innerHTML = ''; // مسح المحتوى القديم
+
+            const daysType = document.querySelector('input[name="daysType"]:checked')?.value;
+            let dates = [];
+
+            if (daysType === 'consecutive') {
+                // أيام متتالية - حساب الأيام من start إلى end
+                const startDate = document.querySelector('input[name="consecutiveStartDate"]')?.value;
+                const endDate = document.querySelector('input[name="consecutiveEndDate"]')?.value;
+
+                if (startDate && endDate) {
+                    dates = getDatesInRange(startDate, endDate);
+                }
+            } else if (daysType === 'separate') {
+                // أيام متباعدة - قراءة جميع الحقول
+                const dateInputs = document.querySelectorAll('input[name="separateDate[]"]');
+                dateInputs.forEach(input => {
+                    if (input.value) {
+                        dates.push(input.value);
+                    }
+                });
+
+                // ترتيب التواريخ
+                dates.sort();
+            }
+
+            // إنشاء حقول الوقت لكل يوم
+            if (dates.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center p-6 bg-amber-50 border-2 border-amber-200 rounded-xl">
+                        <i class="fas fa-calendar-times text-amber-600 text-3xl mb-3"></i>
+                        <p class="text-amber-800 font-bold">لم يتم تحديد أي تواريخ بعد</p>
+                        <p class="text-xs text-amber-600 mt-1">يرجى تحديد التواريخ أولاً</p>
+                    </div>`;
+                return;
+            }
+
+            dates.forEach((date, index) => {
+                const dayName = getArabicDayName(date);
+                const formattedDate = formatArabicDate(date);
+
+                const fieldHTML = `
+                    <div class="bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-2xl p-5 shadow-sm">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-teal-500 text-white rounded-full flex items-center justify-center font-black text-lg">
+                                ${index + 1}
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-xs font-bold text-teal-600">${dayName}</div>
+                                <div class="text-sm font-black text-teal-900">${formattedDate}</div>
+                            </div>
+                            <i class="fas fa-clock text-2xl text-teal-400"></i>
+                        </div>
+
+                        <input type="hidden" name="dayDate[]" value="${date}">
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-600 mb-1 text-center">وقت البدء</label>
+                                <input type="time" name="dayStartTime[]" required
+                                       class="w-full p-3 bg-white border-2 border-teal-200 rounded-xl font-bold text-center
+                                              focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-gray-600 mb-1 text-center">وقت الانتهاء</label>
+                                <input type="time" name="dayEndTime[]" required
+                                       class="w-full p-3 bg-white border-2 border-teal-200 rounded-xl font-bold text-center
+                                              focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.insertAdjacentHTML('beforeend', fieldHTML);
+            });
+
+            // إضافة ملاحظة في النهاية
+            container.insertAdjacentHTML('beforeend', `
+                <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
+                    <i class="fas fa-check-circle text-green-600 text-xl mb-2"></i>
+                    <p class="text-sm font-bold text-green-800">تم إنشاء حقول الأوقات لـ ${dates.length} يوم</p>
+                    <p class="text-xs text-green-600 mt-1">قم بتحديد الأوقات لكل يوم على حدة</p>
+                </div>
+            `);
+        }
+
+        /**
+         * الحصول على جميع التواريخ في نطاق معين
+         */
+        function getDatesInRange(startDate, endDate) {
+            const dates = [];
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // التحقق من صحة التواريخ
+            if (end < start) return [];
+
+            let current = new Date(start);
+            while (current <= end) {
+                dates.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+
+            return dates;
+        }
+
+        /**
+         * الحصول على اسم اليوم بالعربية
+         */
+        function getArabicDayName(dateStr) {
+            const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+            const date = new Date(dateStr + 'T00:00:00');
+            return days[date.getDay()];
+        }
+
+        /**
+         * تنسيق التاريخ بالعربية
+         */
+        function formatArabicDate(dateStr) {
+            const months = [
+                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            ];
+            const date = new Date(dateStr + 'T00:00:00');
+            return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+        }
+
         function toggleHallNameInput() {
             const select = document.getElementById('hall_selection_type');
             document.getElementById('custom_hall_input_div').style.display = (select.value === 'custom' ? 'block' : 'none');
         }
+
         function setLoc(type) {
             document.getElementById('locationType').value = type;
             document.getElementById('loc-internal').style.display = (type === 'internal' ? 'block' : 'none');
@@ -333,6 +505,26 @@ if ($page == 'success'):
             document.getElementById('tab-int').className = type === 'internal' ? "flex-1 py-4 rounded-xl font-black bg-white shadow-md text-teal-900 transition-all" : "flex-1 py-4 rounded-xl font-black text-teal-500 transition-all";
             document.getElementById('tab-ext').className = type === 'external' ? "flex-1 py-4 rounded-xl font-black bg-white shadow-md text-teal-900 transition-all" : "flex-1 py-4 rounded-xl font-black text-teal-500 transition-all";
         }
+
+        // إضافة مستمعات للأحداث على حقول التواريخ
+        document.addEventListener('DOMContentLoaded', function() {
+            // للأيام المتتالية
+            const consecutiveStartDate = document.querySelector('input[name="consecutiveStartDate"]');
+            const consecutiveEndDate = document.querySelector('input[name="consecutiveEndDate"]');
+
+            if (consecutiveStartDate) {
+                consecutiveStartDate.addEventListener('change', generateDifferentTimingFields);
+            }
+            if (consecutiveEndDate) {
+                consecutiveEndDate.addEventListener('change', generateDifferentTimingFields);
+            }
+
+            // للأيام المتباعدة (الحقل الأول)
+            const firstSeparateDate = document.querySelector('input[name="separateDate[]"]');
+            if (firstSeparateDate) {
+                firstSeparateDate.addEventListener('change', generateDifferentTimingFields);
+            }
+        });
     </script>
 <?php endif; ?>
 
