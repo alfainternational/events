@@ -146,6 +146,33 @@ if ($status_filter !== 'all') {
     $where_status = " AND e.status = " . $pdo->quote($status_filter);
 }
 
+// الترتيب (Sort Options)
+$sort_by = $_GET['sort'] ?? 'created_desc';
+$order_by = 'e.created_at DESC'; // الافتراضي
+
+switch ($sort_by) {
+    case 'created_desc':
+        $order_by = 'e.created_at DESC';
+        break;
+    case 'created_asc':
+        $order_by = 'e.created_at ASC';
+        break;
+    case 'date_desc':
+        $order_by = 'e.start_date DESC, e.start_time DESC';
+        break;
+    case 'date_asc':
+        $order_by = 'e.start_date ASC, e.start_time ASC';
+        break;
+    case 'status':
+        $order_by = 'e.status ASC, e.created_at DESC';
+        break;
+    case 'location':
+        $order_by = 'e.location_type ASC, e.created_at DESC';
+        break;
+    default:
+        $order_by = 'e.created_at DESC';
+}
+
 // الحصول على رقم الصفحة الحالية
 $current_page = isset($_GET['page_num']) ? max(1, (int)$_GET['page_num']) : 1;
 $per_page = 15; // 15 فعالية في كل صفحة
@@ -162,7 +189,7 @@ $stmt = $pdo->prepare("SELECT e.*, h.name as hall_name
                       FROM events e
                       LEFT JOIN halls h ON e.hall_id = h.id
                       WHERE e.deleted_at IS NULL" . $where_status . "
-                      ORDER BY e.created_at DESC
+                      ORDER BY " . $order_by . "
                       LIMIT :limit OFFSET :offset");
 $stmt->bindValue(':limit', $pagination['per_page'], PDO::PARAM_INT);
 $stmt->bindValue(':offset', $pagination['offset'], PDO::PARAM_INT);
@@ -268,6 +295,34 @@ include 'includes/header.php';
                 <span class="text-teal-600 font-black text-lg"><?= $pagination['total_items'] ?></span>
                 <span class="text-teal-500 font-bold text-sm mr-2">نتيجة</span>
             </div>
+        </div>
+
+        <!-- Sort Options -->
+        <div class="mt-4 flex items-center gap-3">
+            <span class="text-sm font-black text-teal-700">
+                <i class="fas fa-sort ml-1"></i> الترتيب:
+            </span>
+            <select onchange="window.location.href=this.value"
+                    class="px-4 py-2 rounded-lg text-sm font-bold border-2 border-teal-100 bg-white text-teal-700 focus:ring-2 focus:ring-teal-500 outline-none">
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=created_desc" <?= $sort_by === 'created_desc' ? 'selected' : '' ?>>
+                    الأحدث إنشاءً
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=created_asc" <?= $sort_by === 'created_asc' ? 'selected' : '' ?>>
+                    الأقدم إنشاءً
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=date_desc" <?= $sort_by === 'date_desc' ? 'selected' : '' ?>>
+                    تاريخ الفعالية (الأحدث)
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=date_asc" <?= $sort_by === 'date_asc' ? 'selected' : '' ?>>
+                    تاريخ الفعالية (الأقدم)
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=status" <?= $sort_by === 'status' ? 'selected' : '' ?>>
+                    حسب الحالة
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=location" <?= $sort_by === 'location' ? 'selected' : '' ?>>
+                    حسب الموقع (داخلي/خارجي)
+                </option>
+            </select>
         </div>
     </div>
 <?php endif; ?>
@@ -444,6 +499,9 @@ include 'includes/header.php';
         $query_params = ['tab' => 'events'];
         if ($status_filter !== 'all') {
             $query_params['status'] = $status_filter;
+        }
+        if ($sort_by !== 'created_desc') {
+            $query_params['sort'] = $sort_by;
         }
         render_pagination($pagination, 'admin.php', $query_params);
     endif;
