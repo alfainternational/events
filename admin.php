@@ -136,7 +136,37 @@ if (isset($_GET['logout'])) {
     exit();
 }
 
-$stmt = $pdo->query("SELECT e.*, h.name as hall_name FROM events e LEFT JOIN halls h ON e.hall_id = h.id WHERE e.deleted_at IS NULL ORDER BY e.created_at DESC");
+// تحميل pagination helper
+require_once 'includes/pagination.php';
+
+// التصفية حسب الحالة
+$status_filter = $_GET['status'] ?? 'all';
+$where_status = '';
+if ($status_filter !== 'all') {
+    $where_status = " AND e.status = " . $pdo->quote($status_filter);
+}
+
+// الحصول على رقم الصفحة الحالية
+$current_page = isset($_GET['page_num']) ? max(1, (int)$_GET['page_num']) : 1;
+$per_page = 15; // 15 فعالية في كل صفحة
+
+// حساب إجمالي عدد الفعاليات
+$count_stmt = $pdo->query("SELECT COUNT(*) FROM events e WHERE e.deleted_at IS NULL" . $where_status);
+$total_events = $count_stmt->fetchColumn();
+
+// حساب pagination
+$pagination = calculate_pagination($total_events, $current_page, $per_page);
+
+// جلب الفعاليات مع LIMIT و OFFSET
+$stmt = $pdo->prepare("SELECT e.*, h.name as hall_name
+                      FROM events e
+                      LEFT JOIN halls h ON e.hall_id = h.id
+                      WHERE e.deleted_at IS NULL" . $where_status . "
+                      ORDER BY e.created_at DESC
+                      LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $pagination['per_page'], PDO::PARAM_INT);
+$stmt->bindValue(':offset', $pagination['offset'], PDO::PARAM_INT);
+$stmt->execute();
 $events = $stmt->fetchAll();
 
 // جلب الإعدادات
@@ -196,6 +226,51 @@ include 'includes/header.php';
         <i class="fas fa-history ml-2"></i> المراجعة
     </a>
 </div>
+
+<?php if ($current_tab == 'events'): ?>
+    <!-- Filters Section -->
+    <div class="shimal-card bg-white p-4 md:p-6 mb-6 shadow-md">
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <!-- Status Filter -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <span class="text-sm font-black text-teal-700">تصفية:</span>
+                <div class="flex gap-2 flex-wrap">
+                    <a href="admin.php?tab=events&status=all"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'all' ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-600 hover:bg-teal-100' ?>">
+                        الكل (<?= $total_events ?>)
+                    </a>
+                    <?php
+                    $pending_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='pending' AND deleted_at IS NULL")->fetchColumn();
+                    $approved_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='approved' AND deleted_at IS NULL")->fetchColumn();
+                    $rejected_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='rejected' AND deleted_at IS NULL")->fetchColumn();
+                    ?>
+                    <a href="admin.php?tab=events&status=pending"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100' ?>">
+                        قيد المراجعة (<?= $pending_count ?>)
+                    </a>
+                    <a href="admin.php?tab=events&status=approved"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'approved' ? 'bg-green-500 text-white' : 'bg-green-50 text-green-600 hover:bg-green-100' ?>">
+                        معتمد (<?= $approved_count ?>)
+                    </a>
+                    <a href="admin.php?tab=events&status=rejected"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'rejected' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100' ?>">
+                        مرفوض (<?= $rejected_count ?>)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Total count -->
+            <div class="bg-teal-50 px-6 py-3 rounded-xl border-2 border-teal-100">
+                <span class="text-teal-600 font-black text-lg"><?= $pagination['total_items'] ?></span>
+                <span class="text-teal-500 font-bold text-sm mr-2">نتيجة</span>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if ($current_tab == 'settings'): ?>
     <div class="shimal-card bg-white p-6 md:p-10 shadow-xl">
@@ -362,6 +437,17 @@ include 'includes/header.php';
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <?php
+    // عرض pagination controls للفعاليات فقط
+    if ($current_tab === 'events'):
+        $query_params = ['tab' => 'events'];
+        if ($status_filter !== 'all') {
+            $query_params['status'] = $status_filter;
+        }
+        render_pagination($pagination, 'admin.php', $query_params);
+    endif;
+    ?>
 <?php endif; ?>
 
 <script>
