@@ -364,4 +364,65 @@ include 'includes/header.php';
     </div>
 <?php endif; ?>
 
+<script>
+// Initialize ConfirmDialog for delete buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // جميع أزرار الحذف
+    const deleteForms = document.querySelectorAll('form[action=""] input[name="action"][value="delete"]');
+
+    deleteForms.forEach(input => {
+        const form = input.closest('form');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // استخدام ConfirmDialog إذا كان متاحاً
+                if (typeof ConfirmDialog !== 'undefined') {
+                    const confirmed = await ConfirmDialog.show({
+                        title: 'تأكيد الحذف',
+                        message: 'هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
+                        confirmText: 'نعم، احذف',
+                        cancelText: 'إلغاء',
+                        type: 'danger',
+                        showIcon: true
+                    });
+
+                    if (confirmed) {
+                        // إظهار loading spinner
+                        if (typeof LoadingSpinner !== 'undefined') {
+                            LoadingSpinner.show('جاري الحذف...');
+                        }
+                        form.submit();
+                    }
+                } else {
+                    // Fallback للمتصفحات القديمة
+                    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+                        form.submit();
+                    }
+                }
+            });
+        }
+    });
+
+    // إظهار Toast للرسائل الفورية من Flash
+    <?php if (isset($_SESSION['flash_message'])): ?>
+        if (typeof Toast !== 'undefined') {
+            const flashType = '<?= $_SESSION['flash_type'] ?? 'info' ?>';
+            const flashMessage = <?= json_encode($_SESSION['flash_message']) ?>;
+
+            if (flashType === 'success') {
+                Toast.success(flashMessage);
+            } else if (flashType === 'error') {
+                Toast.error(flashMessage);
+            } else if (flashType === 'warning') {
+                Toast.warning(flashMessage);
+            } else {
+                Toast.info(flashMessage);
+            }
+        }
+        <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+    <?php endif; ?>
+});
+</script>
+
 <?php include 'includes/footer.php'; ?>

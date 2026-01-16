@@ -524,6 +524,26 @@ if ($page == 'success'):
             if (firstSeparateDate) {
                 firstSeparateDate.addEventListener('change', generateDifferentTimingFields);
             }
+
+            // Initialize Inline Validation for booking form
+            if (typeof InlineValidator !== 'undefined') {
+                const validator = new InlineValidator('#bookingForm', {
+                    validateOnBlur: true,
+                    validateOnInput: true,
+                    showSuccessIcon: true,
+                    debounceDelay: 300,
+                    customValidators: window.CustomValidators || {}
+                });
+
+                // إضافة رسالة نجاح عند إرسال النموذج بنجاح
+                const form = document.getElementById('bookingForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        // التحقق سيتم في InlineValidator
+                        // إذا نجح التحقق، سيتم إرسال النموذج
+                    });
+                }
+            }
         });
     </script>
 <?php endif; ?>

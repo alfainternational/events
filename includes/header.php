@@ -6,23 +6,29 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="theme-color" content="#14b8a6">
     <title>بوابة الفعاليات | كلية الشمال للتمريض الأهلية</title>
-    
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 
+    <!-- Dark Mode CSS -->
+    <link rel="stylesheet" href="assets/css/darkmode.css">
+
+    <!-- UI Components CSS -->
+    <link rel="stylesheet" href="assets/css/components.css">
+
     <style>
         :root { --primary: #14b8a6; --secondary: #0d9488; --accent: #facc15; --bg: #f0fdfa; }
         body { font-family: 'Cairo', sans-serif; background-color: var(--bg); color: #0f172a; font-size: 16px; line-height: 1.6; }
-        
+
         .shimal-card { background: white; border-radius: 1.5rem; border: 1px solid rgba(20, 184, 166, 0.1); transition: all 0.3s ease; }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; border-radius: 1rem; font-weight: 900; box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2); }
-        
+
         /* حل مشكلة القائمة والطبقة العازلة في الجوال */
         #nav-links { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2100; }
         @media (max-width: 768px) {
@@ -31,10 +37,23 @@
             .mobile-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; backdrop-filter: blur(4px); }
             .mobile-overlay.active { display: block; }
         }
-        
+
         input, select, textarea { font-size: 16px !important; min-height: 48px; border-radius: 0.75rem; border: 1px solid #e2e8f0; width: 100%; padding: 0.75rem; }
         label { font-size: 14px; font-weight: 900; color: #0f766e; margin-bottom: 0.5rem; display: block; text-transform: uppercase; }
+
+        /* Validation Styles */
+        .validation-error { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+        .validation-success { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        .validation-message { font-size: 0.875rem; margin-top: 0.25rem; }
     </style>
+
+    <!-- Enhanced JavaScript Libraries -->
+    <script src="assets/js/ui-components.js" defer></script>
+    <script src="assets/js/inline-validation.js" defer></script>
+    <script src="assets/js/conflict-checker.js" defer></script>
+    <script src="assets/js/enhanced-datepicker.js" defer></script>
+    <script src="assets/js/autosave.js" defer></script>
+    <script src="assets/js/darkmode.js" defer></script>
 </head>
 <body>
     <div class="mobile-overlay" id="mobileOverlay"></div>
@@ -57,6 +76,13 @@
                 <a href="edit_booking.php" class="font-bold text-teal-700 hover:text-teal-500 py-3 md:py-0 border-b md:border-0">تعديل طلب</a>
                 <a href="calendar.php" class="font-bold text-teal-700 hover:text-teal-500 py-3 md:py-0 border-b md:border-0">التقويم</a>
                 <a href="search.php" class="font-bold text-teal-700 hover:text-teal-500 py-3 md:py-0 border-b md:border-0">البحث</a>
+
+                <!-- Dark Mode Toggle -->
+                <button id="darkModeToggle" class="p-2 rounded-lg hover:bg-teal-50 transition"
+                        data-tooltip="تبديل الوضع المظلم" data-tooltip-position="bottom">
+                    <i class="fas fa-moon text-teal-600"></i>
+                </button>
+
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <a href="admin.php" class="btn-primary w-full md:w-auto">لوحة الإدارة</a>
                 <?php else: ?>
@@ -71,5 +97,12 @@
         const overlay = document.getElementById('mobileOverlay');
         menuBtn.onclick = () => { navLinks.classList.toggle('active'); overlay.classList.toggle('active'); };
         overlay.onclick = () => { navLinks.classList.remove('active'); overlay.classList.remove('active'); };
+
+        // Initialize Tooltips when UI components are loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Tooltip !== 'undefined') {
+                Tooltip.init();
+            }
+        });
     </script>
     <main class="max-w-7xl mx-auto px-4 py-8">
