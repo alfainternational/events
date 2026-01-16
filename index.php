@@ -39,12 +39,43 @@ if ($page == 'success'):
     </section>
 
 <?php elseif ($page == 'home'):
-    $stmt = $pdo->query("SELECT e.*, h.name as hall_name FROM events e LEFT JOIN halls h ON e.hall_id = h.id WHERE e.status = 'approved' AND e.deleted_at IS NULL ORDER BY e.start_date ASC");
+    // تحميل pagination helper
+    require_once 'includes/pagination.php';
+
+    // الحصول على رقم الصفحة الحالية
+    $current_page = isset($_GET['page_num']) ? max(1, (int)$_GET['page_num']) : 1;
+    $per_page = 12; // 12 فعالية في كل صفحة
+
+    // حساب إجمالي عدد الفعاليات
+    $count_stmt = $pdo->query("SELECT COUNT(*) FROM events WHERE status = 'approved' AND deleted_at IS NULL");
+    $total_events = $count_stmt->fetchColumn();
+
+    // حساب pagination
+    $pagination = calculate_pagination($total_events, $current_page, $per_page);
+
+    // جلب الفعاليات مع LIMIT و OFFSET
+    $stmt = $pdo->prepare("SELECT e.*, h.name as hall_name
+                          FROM events e
+                          LEFT JOIN halls h ON e.hall_id = h.id
+                          WHERE e.status = 'approved' AND e.deleted_at IS NULL
+                          ORDER BY e.start_date ASC
+                          LIMIT :limit OFFSET :offset");
+    $stmt->bindValue(':limit', $pagination['per_page'], PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $pagination['offset'], PDO::PARAM_INT);
+    $stmt->execute();
     $events = $stmt->fetchAll();
 ?>
     <div class="mb-10">
-        <h2 class="text-3xl md:text-4xl font-black text-teal-950">الفعاليات القادمة</h2>
-        <p class="text-teal-600 font-medium">الأنشطة المعتمدة في الكلية</p>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h2 class="text-3xl md:text-4xl font-black text-teal-950">الفعاليات القادمة</h2>
+                <p class="text-teal-600 font-medium">الأنشطة المعتمدة في الكلية</p>
+            </div>
+            <div class="bg-teal-50 px-6 py-3 rounded-xl border-2 border-teal-100">
+                <span class="text-teal-600 font-black text-lg"><?= $total_events ?></span>
+                <span class="text-teal-500 font-bold text-sm mr-2">فعالية مجدولة</span>
+            </div>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -71,6 +102,11 @@ if ($page == 'success'):
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <?php
+    // عرض pagination controls
+    render_pagination($pagination, 'index.php', ['page' => 'home']);
+    ?>
 
 <?php elseif ($page == 'booking'): ?>
     <section class="max-w-4xl mx-auto">
@@ -523,6 +559,26 @@ if ($page == 'success'):
             const firstSeparateDate = document.querySelector('input[name="separateDate[]"]');
             if (firstSeparateDate) {
                 firstSeparateDate.addEventListener('change', generateDifferentTimingFields);
+            }
+
+            // Initialize Inline Validation for booking form
+            if (typeof InlineValidator !== 'undefined') {
+                const validator = new InlineValidator('#bookingForm', {
+                    validateOnBlur: true,
+                    validateOnInput: true,
+                    showSuccessIcon: true,
+                    debounceDelay: 300,
+                    customValidators: window.CustomValidators || {}
+                });
+
+                // إضافة رسالة نجاح عند إرسال النموذج بنجاح
+                const form = document.getElementById('bookingForm');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        // التحقق سيتم في InlineValidator
+                        // إذا نجح التحقق، سيتم إرسال النموذج
+                    });
+                }
             }
         });
     </script>
