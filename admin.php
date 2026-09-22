@@ -136,7 +136,64 @@ if (isset($_GET['logout'])) {
     exit();
 }
 
-$stmt = $pdo->query("SELECT e.*, h.name as hall_name FROM events e LEFT JOIN halls h ON e.hall_id = h.id WHERE e.deleted_at IS NULL ORDER BY e.created_at DESC");
+// تحميل pagination helper
+require_once 'includes/pagination.php';
+
+// التصفية حسب الحالة
+$status_filter = $_GET['status'] ?? 'all';
+$where_status = '';
+if ($status_filter !== 'all') {
+    $where_status = " AND e.status = " . $pdo->quote($status_filter);
+}
+
+// الترتيب (Sort Options)
+$sort_by = $_GET['sort'] ?? 'created_desc';
+$order_by = 'e.created_at DESC'; // الافتراضي
+
+switch ($sort_by) {
+    case 'created_desc':
+        $order_by = 'e.created_at DESC';
+        break;
+    case 'created_asc':
+        $order_by = 'e.created_at ASC';
+        break;
+    case 'date_desc':
+        $order_by = 'e.start_date DESC, e.start_time DESC';
+        break;
+    case 'date_asc':
+        $order_by = 'e.start_date ASC, e.start_time ASC';
+        break;
+    case 'status':
+        $order_by = 'e.status ASC, e.created_at DESC';
+        break;
+    case 'location':
+        $order_by = 'e.location_type ASC, e.created_at DESC';
+        break;
+    default:
+        $order_by = 'e.created_at DESC';
+}
+
+// الحصول على رقم الصفحة الحالية
+$current_page = isset($_GET['page_num']) ? max(1, (int)$_GET['page_num']) : 1;
+$per_page = 15; // 15 فعالية في كل صفحة
+
+// حساب إجمالي عدد الفعاليات
+$count_stmt = $pdo->query("SELECT COUNT(*) FROM events e WHERE e.deleted_at IS NULL" . $where_status);
+$total_events = $count_stmt->fetchColumn();
+
+// حساب pagination
+$pagination = calculate_pagination($total_events, $current_page, $per_page);
+
+// جلب الفعاليات مع LIMIT و OFFSET
+$stmt = $pdo->prepare("SELECT e.*, h.name as hall_name
+                      FROM events e
+                      LEFT JOIN halls h ON e.hall_id = h.id
+                      WHERE e.deleted_at IS NULL" . $where_status . "
+                      ORDER BY " . $order_by . "
+                      LIMIT :limit OFFSET :offset");
+$stmt->bindValue(':limit', $pagination['per_page'], PDO::PARAM_INT);
+$stmt->bindValue(':offset', $pagination['offset'], PDO::PARAM_INT);
+$stmt->execute();
 $events = $stmt->fetchAll();
 
 // جلب الإعدادات
@@ -196,6 +253,79 @@ include 'includes/header.php';
         <i class="fas fa-history ml-2"></i> المراجعة
     </a>
 </div>
+
+<?php if ($current_tab == 'events'): ?>
+    <!-- Filters Section -->
+    <div class="shimal-card bg-white p-4 md:p-6 mb-6 shadow-md">
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <!-- Status Filter -->
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <span class="text-sm font-black text-teal-700">تصفية:</span>
+                <div class="flex gap-2 flex-wrap">
+                    <a href="admin.php?tab=events&status=all"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'all' ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-600 hover:bg-teal-100' ?>">
+                        الكل (<?= $total_events ?>)
+                    </a>
+                    <?php
+                    $pending_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='pending' AND deleted_at IS NULL")->fetchColumn();
+                    $approved_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='approved' AND deleted_at IS NULL")->fetchColumn();
+                    $rejected_count = $pdo->query("SELECT COUNT(*) FROM events WHERE status='rejected' AND deleted_at IS NULL")->fetchColumn();
+                    ?>
+                    <a href="admin.php?tab=events&status=pending"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100' ?>">
+                        قيد المراجعة (<?= $pending_count ?>)
+                    </a>
+                    <a href="admin.php?tab=events&status=approved"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'approved' ? 'bg-green-500 text-white' : 'bg-green-50 text-green-600 hover:bg-green-100' ?>">
+                        معتمد (<?= $approved_count ?>)
+                    </a>
+                    <a href="admin.php?tab=events&status=rejected"
+                       class="px-4 py-2 rounded-lg text-sm font-bold transition
+                              <?= $status_filter === 'rejected' ? 'bg-red-500 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100' ?>">
+                        مرفوض (<?= $rejected_count ?>)
+                    </a>
+                </div>
+            </div>
+
+            <!-- Total count -->
+            <div class="bg-teal-50 px-6 py-3 rounded-xl border-2 border-teal-100">
+                <span class="text-teal-600 font-black text-lg"><?= $pagination['total_items'] ?></span>
+                <span class="text-teal-500 font-bold text-sm mr-2">نتيجة</span>
+            </div>
+        </div>
+
+        <!-- Sort Options -->
+        <div class="mt-4 flex items-center gap-3">
+            <span class="text-sm font-black text-teal-700">
+                <i class="fas fa-sort ml-1"></i> الترتيب:
+            </span>
+            <select onchange="window.location.href=this.value"
+                    class="px-4 py-2 rounded-lg text-sm font-bold border-2 border-teal-100 bg-white text-teal-700 focus:ring-2 focus:ring-teal-500 outline-none">
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=created_desc" <?= $sort_by === 'created_desc' ? 'selected' : '' ?>>
+                    الأحدث إنشاءً
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=created_asc" <?= $sort_by === 'created_asc' ? 'selected' : '' ?>>
+                    الأقدم إنشاءً
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=date_desc" <?= $sort_by === 'date_desc' ? 'selected' : '' ?>>
+                    تاريخ الفعالية (الأحدث)
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=date_asc" <?= $sort_by === 'date_asc' ? 'selected' : '' ?>>
+                    تاريخ الفعالية (الأقدم)
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=status" <?= $sort_by === 'status' ? 'selected' : '' ?>>
+                    حسب الحالة
+                </option>
+                <option value="admin.php?tab=events&status=<?= $status_filter ?>&sort=location" <?= $sort_by === 'location' ? 'selected' : '' ?>>
+                    حسب الموقع (داخلي/خارجي)
+                </option>
+            </select>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if ($current_tab == 'settings'): ?>
     <div class="shimal-card bg-white p-6 md:p-10 shadow-xl">
@@ -362,6 +492,81 @@ include 'includes/header.php';
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <?php
+    // عرض pagination controls للفعاليات فقط
+    if ($current_tab === 'events'):
+        $query_params = ['tab' => 'events'];
+        if ($status_filter !== 'all') {
+            $query_params['status'] = $status_filter;
+        }
+        if ($sort_by !== 'created_desc') {
+            $query_params['sort'] = $sort_by;
+        }
+        render_pagination($pagination, 'admin.php', $query_params);
+    endif;
+    ?>
 <?php endif; ?>
+
+<script>
+// Initialize ConfirmDialog for delete buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // جميع أزرار الحذف
+    const deleteForms = document.querySelectorAll('form[action=""] input[name="action"][value="delete"]');
+
+    deleteForms.forEach(input => {
+        const form = input.closest('form');
+        if (form) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // استخدام ConfirmDialog إذا كان متاحاً
+                if (typeof ConfirmDialog !== 'undefined') {
+                    const confirmed = await ConfirmDialog.show({
+                        title: 'تأكيد الحذف',
+                        message: 'هل أنت متأكد من حذف هذا الطلب؟ لا يمكن التراجع عن هذا الإجراء.',
+                        confirmText: 'نعم، احذف',
+                        cancelText: 'إلغاء',
+                        type: 'danger',
+                        showIcon: true
+                    });
+
+                    if (confirmed) {
+                        // إظهار loading spinner
+                        if (typeof LoadingSpinner !== 'undefined') {
+                            LoadingSpinner.show('جاري الحذف...');
+                        }
+                        form.submit();
+                    }
+                } else {
+                    // Fallback للمتصفحات القديمة
+                    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+                        form.submit();
+                    }
+                }
+            });
+        }
+    });
+
+    // إظهار Toast للرسائل الفورية من Flash
+    <?php if (isset($_SESSION['flash_message'])): ?>
+        if (typeof Toast !== 'undefined') {
+            const flashType = '<?= $_SESSION['flash_type'] ?? 'info' ?>';
+            const flashMessage = <?= json_encode($_SESSION['flash_message']) ?>;
+
+            if (flashType === 'success') {
+                Toast.success(flashMessage);
+            } else if (flashType === 'error') {
+                Toast.error(flashMessage);
+            } else if (flashType === 'warning') {
+                Toast.warning(flashMessage);
+            } else {
+                Toast.info(flashMessage);
+            }
+        }
+        <?php unset($_SESSION['flash_message'], $_SESSION['flash_type']); ?>
+    <?php endif; ?>
+});
+</script>
 
 <?php include 'includes/footer.php'; ?>
